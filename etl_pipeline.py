@@ -80,27 +80,29 @@ def process_data(patient_file, appointment_file):
         patient_data['address'] = patient_data['address'].apply(hash_sensitive_info)
         patient_data['phone_number'] = patient_data['phone_number'].apply(hash_sensitive_info)
 
-        # Join the patient and appointment data on patient_id
-        logging.info("Joining patient and appointment data.")
-        joined_data = pd.merge(patient_data, appointment_data, on='patient_id')
+        # Save patient and appointment data as Parquet
+        patient_parquet_path = 'patient_data.parquet'
+        appointment_parquet_path = 'appointment_data.parquet'
+        
+        patient_table = pa.Table.from_pandas(patient_data)
+        pq.write_table(patient_table, patient_parquet_path)
 
-        # Save joined data as Parquet
-        output_parquet_path = 'joined_data.parquet'
-        table = pa.Table.from_pandas(joined_data)
-        pq.write_table(table, output_parquet_path)
+        appointment_table = pa.Table.from_pandas(appointment_data)
+        pq.write_table(appointment_table, appointment_parquet_path)
 
-        logging.info(f"Data processing complete. Output saved as {output_parquet_path}.")
-        return output_parquet_path
+        logging.info(f"Data processing complete. Patient data saved as {patient_parquet_path} and appointment data saved as {appointment_parquet_path}.")
+        return patient_parquet_path, appointment_parquet_path
     except Exception as e:
         logging.error(f"Error processing data: {e}")
         raise
 
-# Upload Parquet file to LocalStack S3
-def upload_to_localstack(s3, parquet_file):
+# Upload Parquet files to LocalStack S3
+def upload_to_localstack(s3, parquet_files):
     try:
-        logging.info(f"Uploading {parquet_file} to LocalStack S3.")
-        s3.Bucket('health-data').upload_file(parquet_file, parquet_file)
-        logging.info(f"Uploaded {parquet_file} to LocalStack S3.")
+        for parquet_file in parquet_files:
+            logging.info(f"Uploading {parquet_file} to LocalStack S3.")
+            s3.Bucket('health-data').upload_file(parquet_file, parquet_file)
+            logging.info(f"Uploaded {parquet_file} to LocalStack S3.")
     except Exception as e:
         logging.error(f"Error uploading to LocalStack S3: {e}")
         raise
@@ -122,13 +124,18 @@ def load_and_join_pyspark():
             .config('spark.hadoop.fs.s3a.aws.credentials.provider', 'org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider') \
             .getOrCreate()
     
-        # Read the Parquet file from LocalStack S3 using PySpark
-        logging.info("Reading Parquet file from LocalStack S3 using PySpark.")
-        patient_df = spark.read.parquet('s3a://health-data/joined_data.parquet')
+        # Read the Parquet files from LocalStack S3 using PySpark
+        logging.info("Reading patient and appointment Parquet files from LocalStack S3 using PySpark.")
+        patient_df = spark.read.parquet('s3a://health-data/patient_data.parquet')
+        appointment_df = spark.read.parquet('s3a://health-data/appointment_data.parquet')
     
-        # Show the resulting dataframe
+        # Join the two DataFrames on patient_id
+        logging.info("Joining patient and appointment data.")
+        joined_df = patient_df.join(appointment_df, on='patient_id', how='inner')
+
+        # Show the resulting DataFrame
         logging.info("Displaying the joined data using PySpark.")
-        patient_df.show()
+        joined_df.show()
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
@@ -138,11 +145,11 @@ def load_and_join_pyspark():
 def main(patient_file, appointment_file):
     try:
         # Process and save data
-        parquet_file = process_data(patient_file, appointment_file)
+        parquet_files = process_data(patient_file, appointment_file)
 
         # Setup LocalStack and upload to S3
         s3 = setup_localstack_s3()
-        upload_to_localstack(s3, parquet_file)
+        upload_to_localstack(s3, parquet_files)
 
         # Load and join data using PySpark
         load_and_join_pyspark()
