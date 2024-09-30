@@ -128,18 +128,26 @@ def load_and_join_pyspark():
         logging.info("Reading patient and appointment Parquet files from LocalStack S3 using PySpark.")
         patient_df = spark.read.parquet('s3a://health-data/patient_data.parquet')
         appointment_df = spark.read.parquet('s3a://health-data/appointment_data.parquet')
-    
+        
+        # Drop any unwanted columns (like _index_level_0) from patient_df and appointment_df if they exist
+        unwanted_columns = ['_index_level_0']
+        for column in unwanted_columns:
+            if column in patient_df.columns:
+                patient_df = patient_df.drop(column)
+            if column in appointment_df.columns:
+                appointment_df = appointment_df.drop(column)
+
         # Join the two DataFrames on patient_id
         logging.info("Joining patient and appointment data.")
         joined_df = patient_df.join(appointment_df, on='patient_id', how='inner')
 
-        # Drop any unwanted columns (like _index_level_0 if it exists)
-        if '_index_level_0' in joined_df.columns:
-            joined_df = joined_df.drop('_index_level_0')
-
         # Show the resulting DataFrame
         logging.info("Displaying the joined data using PySpark.")
         joined_df.show()
+        
+        # Optionally, print the schema to verify no unwanted columns
+        joined_df.printSchema()
+        
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
