@@ -11,11 +11,15 @@ RUN apt-get update && \
     wget \
     gnupg \
     apt-transport-https \
-    ca-certificates \
-    && mkdir -p /etc/apt/keyrings \
-    && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /etc/apt/keyrings/adoptium.asc && \
-    echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb buster main" | tee /etc/apt/sources.list.d/adoptium.list > /dev/null && \
-    apt-get update && \
+    ca-certificates
+
+# Add Adoptium GPG key and repository
+RUN mkdir -p /etc/apt/keyrings && \
+    wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb buster main" | tee /etc/apt/sources.list.d/adoptium.list
+
+# Install Temurin JDK
+RUN apt-get update && \
     apt-get install -y temurin-11-jdk && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
