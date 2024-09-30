@@ -133,12 +133,17 @@ def load_and_join_pyspark():
         logging.info("Joining patient and appointment data.")
         joined_df = patient_df.join(appointment_df, on='patient_id', how='inner')
 
+        # Drop any unwanted columns (like _index_level_0 if it exists)
+        if '_index_level_0' in joined_df.columns:
+            joined_df = joined_df.drop('_index_level_0')
+
         # Show the resulting DataFrame
         logging.info("Displaying the joined data using PySpark.")
         joined_df.show()
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
+
 
 
 # Main ETL Pipeline Execution
