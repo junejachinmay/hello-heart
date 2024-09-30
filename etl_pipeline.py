@@ -100,7 +100,8 @@ def upload_to_localstack(s3, parquet_file):
 def load_and_join_pyspark():
     try:
         logging.info("Initializing PySpark session.")
-        # Initialize Spark session with S3 configurations
+        
+        # Initialize Spark session with necessary packages for S3 support
         spark = SparkSession.builder \
             .appName('ETL Pipeline') \
             .config('spark.hadoop.fs.s3a.endpoint', 'http://localstack:4566') \
@@ -108,6 +109,8 @@ def load_and_join_pyspark():
             .config('spark.hadoop.fs.s3a.secret.key', 'test') \
             .config('spark.hadoop.fs.s3a.path.style.access', 'true') \
             .config('spark.hadoop.fs.s3a.impl', 'org.apache.hadoop.fs.s3a.S3AFileSystem') \
+            .config('spark.jars.packages', 'org.apache.hadoop:hadoop-aws:3.2.0,com.amazonaws:aws-java-sdk-bundle:1.11.888') \
+            .config('spark.hadoop.fs.s3a.aws.credentials.provider', 'org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider') \
             .getOrCreate()
     
         # Read the Parquet file from LocalStack S3 using PySpark
@@ -120,6 +123,7 @@ def load_and_join_pyspark():
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
+
 
 # Main ETL Pipeline Execution
 def main(patient_file, appointment_file):

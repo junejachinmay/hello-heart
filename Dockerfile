@@ -11,7 +11,10 @@ RUN apt-get update && \
     wget \
     gnupg \
     apt-transport-https \
-    ca-certificates
+    ca-certificates \
+    build-essential \
+    curl \
+    python3-dev
 
 # Add Adoptium GPG key and repository
 RUN mkdir -p /etc/apt/keyrings && \
@@ -28,10 +31,25 @@ RUN apt-get update && \
 ENV JAVA_HOME="/usr/lib/jvm/temurin-11-jdk-amd64"
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
+# Install Hadoop and related AWS libraries for S3 support
+RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-3.2.0/hadoop-3.2.0.tar.gz && \
+    tar -xzf hadoop-3.2.0.tar.gz && \
+    mv hadoop-3.2.0 /usr/local/hadoop && \
+    rm hadoop-3.2.0.tar.gz
+
+# Set Hadoop environment variables
+ENV HADOOP_HOME=/usr/local/hadoop
+ENV PATH=$HADOOP_HOME/bin:$PATH
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+
+# Install the necessary Hadoop AWS and AWS SDK dependencies
+RUN wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar -P $HADOOP_HOME/share/hadoop/tools/lib/ && \
+    wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.888/aws-java-sdk-bundle-1.11.888.jar -P $HADOOP_HOME/share/hadoop/tools/lib/
+
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install the dependencies
+# Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
