@@ -12,15 +12,16 @@ RUN apt-get update && \
     gnupg \
     apt-transport-https \
     ca-certificates \
-    && wget -qO - https://adoptopenjdk.jfrog.io/adoptopenjdk/api/gpg/key/public | apt-key add - && \
-    echo "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ buster main" > /etc/apt/sources.list.d/adoptopenjdk.list && \
+    && mkdir -p /etc/apt/keyrings \
+    && wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /etc/apt/keyrings/adoptium.asc && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb buster main" | tee /etc/apt/sources.list.d/adoptium.list > /dev/null && \
     apt-get update && \
-    apt-get install -y adoptopenjdk-11-hotspot && \
+    apt-get install -y temurin-11-jdk && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME environment variable
-ENV JAVA_HOME="/usr/lib/jvm/adoptopenjdk-11-hotspot-amd64"
+ENV JAVA_HOME="/usr/lib/jvm/temurin-11-jdk-amd64"
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Copy the requirements file into the container
