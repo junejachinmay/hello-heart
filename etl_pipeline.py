@@ -60,6 +60,15 @@ def process_data(patient_file, appointment_file):
         patient_data = pd.read_csv(patient_file)
         appointment_data = pd.read_csv(appointment_file)
 
+        # Check for duplicates in patient_id
+        if patient_data['patient_id'].duplicated().any():
+            logging.warning("Duplicate patient_id found in patient data.")
+            patient_data = patient_data.drop_duplicates(subset='patient_id')
+        
+        if appointment_data['patient_id'].duplicated().any():
+            logging.warning("Duplicate patient_id found in appointment data.")
+            appointment_data = appointment_data.drop_duplicates(subset='patient_id')
+
         # Standardize phone numbers and addresses
         logging.info("Standardizing phone numbers and addresses.")
         patient_data['phone_number'] = patient_data['phone_number'].apply(standardize_phone_number)
