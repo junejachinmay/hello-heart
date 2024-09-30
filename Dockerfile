@@ -1,25 +1,26 @@
-# Use the official Python image
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.9
+
+# Install Java and other dependencies
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk procps && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set JAVA_HOME
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
+
+# Set PATH to include Java
+ENV PATH $PATH:$JAVA_HOME/bin
+
+# Install PySpark and other Python dependencies
+RUN pip install pyspark pandas pyarrow boto3
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Install the dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application code
-COPY . .
-
-# Set environment variables for AWS (LocalStack uses these)
-ENV AWS_ACCESS_KEY_ID=test
-ENV AWS_SECRET_ACCESS_KEY=test
-ENV AWS_DEFAULT_REGION=us-east-1
-
-# Expose any necessary ports (if needed)
-# EXPOSE 8080
-
-# Command to run your application
+# Run etl_pipeline.py when the container launches
 CMD ["python", "etl_pipeline.py"]
