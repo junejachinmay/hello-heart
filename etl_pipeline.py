@@ -23,7 +23,7 @@ def phone_number_standardization(phone):
         return phone
     except Exception as e:
         logging.error(f"Error standardizing phone number {phone}: {e}")
-        return None
+        raise e
 
 # Standardize addresses: lowercase, remove extra spaces
 def address_standardization(address):
@@ -31,7 +31,7 @@ def address_standardization(address):
         return ' '.join(address.strip().lower().split())
     except Exception as e:
         logging.error(f"Error standardizing address {address}: {e}")
-        return None
+        raise e
 
 # De-identification function for sensitive fields
 def hash_sensitive_information(value):
@@ -41,7 +41,7 @@ def hash_sensitive_information(value):
         return value
     except Exception as e:
         logging.error(f"Error hashing sensitive info {value}: {e}")
-        return None
+        raise e
 
 # Setup connection to LocalStack S3
 def setup_localstack_s3():
