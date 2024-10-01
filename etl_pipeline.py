@@ -80,14 +80,18 @@ def process_data(patient_file, appointment_file):
         patient_data['address'] = patient_data['address'].apply(hash_sensitive_info)
         patient_data['phone_number'] = patient_data['phone_number'].apply(hash_sensitive_info)
 
+        # Remove any columns that might have been added
+        patient_data = patient_data.loc[:, ~patient_data.columns.str.contains('^_.*_column_0$')]
+        appointment_data = appointment_data.loc[:, ~appointment_data.columns.str.contains('^_.*_column_0$')]
+
         # Save patient and appointment data as Parquet
         patient_parquet_path = 'patient_data.parquet'
         appointment_parquet_path = 'appointment_data.parquet'
         
-        patient_table = pa.Table.from_pandas(patient_data)
+        patient_table = pa.Table.from_pandas(patient_data, preserve_index=False)
         pq.write_table(patient_table, patient_parquet_path)
 
-        appointment_table = pa.Table.from_pandas(appointment_data)
+        appointment_table = pa.Table.from_pandas(appointment_data, preserve_index=False)
         pq.write_table(appointment_table, appointment_parquet_path)
 
         logging.info(f"Data processing complete. Patient data saved as {patient_parquet_path} and appointment data saved as {appointment_parquet_path}.")
@@ -140,15 +144,21 @@ def load_and_join_pyspark():
         logging.info("Joining patient and appointment data.")
         joined_df = patient_df.join(appointment_df, on='patient_id', how='inner')
 
+        # Remove any automatically added index columns
+        columns_to_drop = [col for col in joined_df.columns if col.startswith('_') and col.endswith('_column_0')]
+        joined_df = joined_df.drop(*columns_to_drop)
+
         # Show the resulting DataFrame
         logging.info("Displaying the joined data using PySpark.")
-        joined_df.show()        
+        joined_df.show()
+        
+        # Print the schema to verify column names
+        logging.info("Printing the schema of the joined DataFrame:")
+        joined_df.printSchema()
        
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
-
-
 
 # Main ETL Pipeline Execution
 def main(patient_file, appointment_file):
