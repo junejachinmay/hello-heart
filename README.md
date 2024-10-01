@@ -28,14 +28,14 @@ This project implements an ETL (Extract, Transform, Load) pipeline using Python,
 
 ## Project Structure
 
-├── Dockerfile
-├── docker-compose.yaml
-├── etl_pipeline.py
-├── requirements.txt
-├── appointment_data.csv
-└── patient_data.csv
-├── s3-bucket.png   # Screenshot of parquet files in simulated s3 bucket
-├── output-dataframe.png # Screenshot of final data frame
+ - Dockerfile
+ - docker-compose.yaml
+ - etl_pipeline.py
+ - requirements.txt
+ - appointment_data.csv
+ - patient_data.csv
+ - s3-bucket.png   # Screenshot of parquet files in simulated s3 bucket
+ - output-dataframe.png # Screenshot of final data frame
 
 
 ## Dockerfile
