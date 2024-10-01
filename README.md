@@ -52,11 +52,11 @@ The Docker Compose file defines two services:
 
 The main ETL pipeline code that:
 
- - Reads CSV files.
- - Standardizes and de-identifies data.
- - Saves the processed data as Parquet files.
- - Uploads data to LocalStack S3.
- - Uses PySpark to join and display data.
+ - Reads CSV files
+ - Standardizes and de-identifies data
+ - Saves the processed data as Parquet files
+ - Uploads data to LocalStack S3
+ - Uses PySpark to join and display data
 
 
 ## Pipeline Functions
@@ -99,7 +99,7 @@ docker-compose down or Press Ctrl+C to stop the running services
 
 ## LocalStack
 
-You can access LocalStack using the AWS CLI. Make sure you have awscli installed, if not you can install using pip install awscli.
+You can access LocalStack using the AWS CLI. Make sure you have awscli installed, if not, you can install using pip install awscli.
 
 Make sure docker services are running
 
