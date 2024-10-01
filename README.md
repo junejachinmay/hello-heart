@@ -28,6 +28,7 @@ This project implements an ETL (Extract, Transform, Load) pipeline using Python,
 
 ## Project Structure
 
+ - README.md
  - Dockerfile
  - docker-compose.yaml
  - etl_pipeline.py
