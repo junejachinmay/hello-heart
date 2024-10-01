@@ -1,5 +1,12 @@
 Here’s a README file for your ETL pipeline code:
 
+
+PySpark dependency: PySpark requires a Java runtime to execute Spark jobs. Even though you're writing Python code, the underlying Spark engine runs on the JVM.
+
+Hadoop compatibility: The Dockerfile installs Hadoop, which is also Java-based. Hadoop is often used in conjunction with Spark for distributed storage and processing.
+
+AWS SDK: The AWS SDK for Java is installed, which is used for interacting with AWS services, particularly S3 in this case. This allows your PySpark jobs to read from and write to S3 buckets.
+
 ---
 
 # ETL Pipeline for Health Data Processing

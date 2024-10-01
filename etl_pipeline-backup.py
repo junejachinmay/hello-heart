@@ -129,12 +129,6 @@ def load_and_join_pyspark():
         patient_df = spark.read.parquet('s3a://health-data/patient_data.parquet')
         appointment_df = spark.read.parquet('s3a://health-data/appointment_data.parquet')       
 
-        # Drop any columns that might have been added during the save/load process
-        columns_to_drop = [col for col in patient_df.columns if col.startswith('_') and col.endswith('_column_0')]
-        patient_df = patient_df.drop(*columns_to_drop)
-        
-        columns_to_drop = [col for col in appointment_df.columns if col.startswith('_') and col.endswith('_column_0')]
-        appointment_df = appointment_df.drop(*columns_to_drop)
 
         # Join the two DataFrames on patient_id
         logging.info("Joining patient and appointment data.")
