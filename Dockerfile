@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install required packages in one RUN command to reduce layers
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --fix-missing \
     wget \
     gnupg \
     apt-transport-https \
