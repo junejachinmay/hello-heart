@@ -1,3 +1,4 @@
+import os
 import hashlib
 import pandas as pd
 import re
@@ -9,6 +10,9 @@ from pyspark.sql import SparkSession
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Get the S3 bucket name from environment variable or use a default value
+BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 # Standardize phone numbers to the format +1-XXX-XXX-XXXX
 def phone_number_standardization(phone):
@@ -43,10 +47,9 @@ def hash_sensitive_information(value):
 def setup_localstack_s3():
     try:
         s3 = boto3.resource('s3', endpoint_url='http://localstack:4566')
-        bucket_name = 'patient-health-data'
-        if not any(bucket.name == bucket_name for bucket in s3.buckets.all()):
-            s3.create_bucket(Bucket=bucket_name)
-        logging.info(f"LocalStack S3 bucket '{bucket_name}' is set up.")
+        if not any(bucket.name == BUCKET_NAME for bucket in s3.buckets.all()):
+            s3.create_bucket(Bucket=BUCKET_NAME)
+        logging.info(f"LocalStack S3 bucket '{BUCKET_NAME}' is set up.")
         return s3
     except Exception as e:
         logging.error(f"Error setting up LocalStack S3: {e}")
@@ -105,7 +108,7 @@ def upload_to_localstack(s3, parquet_files):
     try:
         for parquet_file in parquet_files:
             logging.info(f"Uploading {parquet_file} to LocalStack S3.")
-            s3.Bucket('patient-health-data').upload_file(parquet_file, parquet_file)
+            s3.Bucket(BUCKET_NAME).upload_file(parquet_file, parquet_file)
             logging.info(f"Uploaded {parquet_file} to LocalStack S3.")
     except Exception as e:
         logging.error(f"Error uploading to LocalStack S3: {e}")
@@ -130,8 +133,8 @@ def join_using_pyspark():
     
         # Read the Parquet files from LocalStack S3 using PySpark
         logging.info("Reading patient and appointment Parquet files from LocalStack S3 using PySpark.")
-        patient_df = spark.read.parquet('s3a://patient-health-data/patient_data.parquet')
-        appointment_df = spark.read.parquet('s3a://patient-health-data/appointment_data.parquet')       
+        patient_df = spark.read.parquet(f's3a://{BUCKET_NAME}/patient_data.parquet')
+        appointment_df = spark.read.parquet(f's3a://{BUCKET_NAME}/appointment_data.parquet')       
 
         # Drop any columns that might have been added during the save/load process
         columns_to_drop = [col for col in patient_df.columns if col.startswith('_') and col.endswith('_column_0')]

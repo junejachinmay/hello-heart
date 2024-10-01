@@ -48,6 +48,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
+
+# Set environment variable for S3 Bucket
+ENV S3_BUCKET_NAME=patient-health-data
+
+
 # Set environment variables for AWS (LocalStack uses these)
 ENV AWS_ACCESS_KEY_ID=test
 ENV AWS_SECRET_ACCESS_KEY=test
