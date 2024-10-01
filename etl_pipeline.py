@@ -155,10 +155,7 @@ def join_using_pyspark():
         logging.info("Displaying the joined data using PySpark.")
         joined_df.show()
         
-        # Print the schema to verify column names
-        logging.info("Printing the schema of the joined DataFrame:")
-        joined_df.printSchema()
-       
+      
     except Exception as e:
         logging.error(f"Error with PySpark operations: {e}")
         raise
