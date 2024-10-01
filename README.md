@@ -29,6 +29,8 @@ This project implements an ETL (Extract, Transform, Load) pipeline using Python,
 ├── requirements.txt
 ├── appointment_data.csv
 └── patient_data.csv
+├── s3-bucket.png   # Screenshot of parquet files in simulated s3 bucket
+├── output-dataframe.png # Screenshot of final data frame
 
 
 ## Dockerfile
@@ -91,7 +93,7 @@ docker-compose up --build
 
 docker-compose down or Press Ctrl+C to stop the running services
 
-![alt text](image-1.png)
+![alt text](output-dataframe.png)
 
 
 
@@ -117,7 +119,7 @@ View data on simulated s3 bucket
 docker-compose up -d
 aws --endpoint-url=http://localhost:4566 s3 ls s3://patient-health-data/
 
-![alt text](image.png)
+![alt text](s3-bucket.png)
 
 
 ### Logging and Error Handling
