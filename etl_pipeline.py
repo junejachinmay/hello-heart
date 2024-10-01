@@ -11,7 +11,7 @@ from pyspark.sql import SparkSession
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Standardize phone numbers to the format +1-XXX-XXX-XXXX
-def standardize_phone_number(phone):
+def phone_number_standardization(phone):
     try:
         phone = re.sub(r'\D', '', phone)  # Remove non-digit characters
         if len(phone) == 10:  # Assume US numbers without country code
@@ -22,7 +22,7 @@ def standardize_phone_number(phone):
         return None
 
 # Standardize addresses: lowercase, remove extra spaces
-def standardize_address(address):
+def address_standardization(address):
     try:
         return ' '.join(address.strip().lower().split())
     except Exception as e:
@@ -30,7 +30,7 @@ def standardize_address(address):
         return None
 
 # De-identification function for sensitive fields
-def hash_sensitive_info(value):
+def hash_sensitive_information(value):
     try:
         if isinstance(value, str):
             return hashlib.sha256(value.encode()).hexdigest()
@@ -43,7 +43,7 @@ def hash_sensitive_info(value):
 def setup_localstack_s3():
     try:
         s3 = boto3.resource('s3', endpoint_url='http://localstack:4566')
-        bucket_name = 'health-data'
+        bucket_name = 'patient-health-data'
         if not any(bucket.name == bucket_name for bucket in s3.buckets.all()):
             s3.create_bucket(Bucket=bucket_name)
         logging.info(f"LocalStack S3 bucket '{bucket_name}' is set up.")
@@ -71,14 +71,14 @@ def process_data(patient_file, appointment_file):
 
         # Standardize phone numbers and addresses
         logging.info("Standardizing phone numbers and addresses.")
-        patient_data['phone_number'] = patient_data['phone_number'].apply(standardize_phone_number)
-        patient_data['address'] = patient_data['address'].apply(standardize_address)
+        patient_data['phone_number'] = patient_data['phone_number'].apply(phone_number_standardization)
+        patient_data['address'] = patient_data['address'].apply(address_standardization)
 
         # De-identify sensitive patient data
         logging.info("De-identifying patient data.")
-        patient_data['name'] = patient_data['name'].apply(hash_sensitive_info)
-        patient_data['address'] = patient_data['address'].apply(hash_sensitive_info)
-        patient_data['phone_number'] = patient_data['phone_number'].apply(hash_sensitive_info)
+        patient_data['name'] = patient_data['name'].apply(hash_sensitive_information)
+        patient_data['address'] = patient_data['address'].apply(hash_sensitive_information)
+        patient_data['phone_number'] = patient_data['phone_number'].apply(hash_sensitive_information)
 
         # Remove any columns that might have been added
         patient_data = patient_data.loc[:, ~patient_data.columns.str.contains('^_.*_column_0$')]
@@ -105,14 +105,14 @@ def upload_to_localstack(s3, parquet_files):
     try:
         for parquet_file in parquet_files:
             logging.info(f"Uploading {parquet_file} to LocalStack S3.")
-            s3.Bucket('health-data').upload_file(parquet_file, parquet_file)
+            s3.Bucket('patient-health-data').upload_file(parquet_file, parquet_file)
             logging.info(f"Uploaded {parquet_file} to LocalStack S3.")
     except Exception as e:
         logging.error(f"Error uploading to LocalStack S3: {e}")
         raise
 
 # PySpark Data Join and Display
-def load_and_join_pyspark():
+def join_using_pyspark():
     try:
         logging.info("Initializing PySpark session.")
         
@@ -130,8 +130,8 @@ def load_and_join_pyspark():
     
         # Read the Parquet files from LocalStack S3 using PySpark
         logging.info("Reading patient and appointment Parquet files from LocalStack S3 using PySpark.")
-        patient_df = spark.read.parquet('s3a://health-data/patient_data.parquet')
-        appointment_df = spark.read.parquet('s3a://health-data/appointment_data.parquet')       
+        patient_df = spark.read.parquet('s3a://patient-health-data/patient_data.parquet')
+        appointment_df = spark.read.parquet('s3a://patient-health-data/appointment_data.parquet')       
 
         # Drop any columns that might have been added during the save/load process
         columns_to_drop = [col for col in patient_df.columns if col.startswith('_') and col.endswith('_column_0')]
@@ -171,7 +171,7 @@ def main(patient_file, appointment_file):
         upload_to_localstack(s3, parquet_files)
 
         # Load and join data using PySpark
-        load_and_join_pyspark()
+        join_using_pyspark()
     except Exception as e:
         logging.error(f"ETL pipeline failed: {e}")
 

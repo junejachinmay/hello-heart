@@ -1,96 +1,119 @@
-Here’s a README file for your ETL pipeline code:
+# ETL Pipeline for Patient-Health Data Processing
 
+This project implements an ETL (Extract, Transform, Load) pipeline using Python, PySpark, Docker, and LocalStack for simulating AWS S3 service. The pipeline processes patient and appointment data, standardizes the information, de-identifies sensitive fields, and uploads the processed data to the simulated S3 bucket. It utilizes PySpark to join and display the processed data.
 
-PySpark dependency: PySpark requires a Java runtime to execute Spark jobs. Even though you're writing Python code, the underlying Spark engine runs on the JVM.
-
-Hadoop compatibility: The Dockerfile installs Hadoop, which is also Java-based. Hadoop is often used in conjunction with Spark for distributed storage and processing.
-
-AWS SDK: The AWS SDK for Java is installed, which is used for interacting with AWS services, particularly S3 in this case. This allows your PySpark jobs to read from and write to S3 buckets.
-
----
-
-# ETL Pipeline for Health Data Processing
-
-This repository contains an ETL (Extract, Transform, Load) pipeline that processes patient and appointment data, standardizes certain fields, de-identifies sensitive information, and uploads the resulting data to a LocalStack S3 bucket. The pipeline also utilizes PySpark to join and display the processed data.
 
 ## Prerequisites
 
-Before running the pipeline, ensure you have the following installed:
-
+- Docker
+- Docker Compose
 - Python 3.x
-- Pandas
-- PyArrow
-- Boto3
-- PySpark
-- LocalStack (for simulating AWS S3)
+- pip
 
-You can install the required Python packages using pip:
 
-```bash
-pip install pandas pyarrow boto3 pyspark
-```
+## Features
 
-## Usage
+- Data ingestion from CSV files
+- Phone number and address standardization
+- Sensitive data de-identification using SHA-256 hashing
+- Parquet file generation for efficient storage
+- Integration with LocalStack for S3-compatible storage
+- Data processing and joining using Python and PySpark
 
-### Setup LocalStack
 
-1. **Run LocalStack** to simulate AWS services. If you haven't set it up, you can use Docker:
-   ```bash
-   docker run -d -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack
-   ```
+## Project Structure
 
-### Prepare Data Files
+├── Dockerfile
+├── docker-compose.yaml
+├── etl_pipeline.py
+├── requirements.txt
+├── appointment_data.csv
+└── patient_data.csv
 
-Ensure you have two CSV files: `patient_data.csv` and `appointment_data.csv` in the same directory as the script. The CSV files should contain the following fields:
 
-- **Patient Data**:
-  - `patient_id`
-  - `name`
-  - `phone_number`
-  - `address`
+## Dockerfile
 
-- **Appointment Data**:
-  - `patient_id`
-  - Other relevant appointment fields.
+The Dockerfile sets up a Python environment, installs required dependencies (including Java for PySpark and Hadoop), and prepares the application for execution.
 
-### Run the ETL Pipeline
 
-To execute the ETL pipeline, run the script as follows:
+## docker-compose.yaml
 
-```bash
-python etl_pipeline.py
-```
+The Docker Compose file defines two services:
 
-### Logging
+- localstack: Simulates AWS services.
+- etl-pipeline: Builds the ETL pipeline service from the Dockerfile.
 
-The pipeline logs its operations to the console. You can monitor the logs for any errors or warnings that may occur during execution.
+  etl-pipeline service depends on the localstack service, ensuring that LocalStack starts before the ETL pipeline runs.
+
+
+## etl_pipeline.py
+
+The main ETL pipeline code that:
+
+ - Reads CSV files.
+ - Standardizes and de-identifies data.
+ - Saves the processed data as Parquet files.
+ - Uploads data to LocalStack S3.
+ - Uses PySpark to join and display data.
+
 
 ## Pipeline Functions
 
-1. **standardize_phone_number(phone)**: Standardizes phone numbers to the format `+1-XXX-XXX-XXXX`.
+1. **phone_number_standardization(phone)**: Standardizes phone numbers to the format `+1-XXX-XXX-XXXX`.
 
-2. **standardize_address(address)**: Standardizes addresses by converting them to lowercase and removing extra spaces.
+2. **address_standardization(address)**: Standardizes addresses by converting them to lowercase and removing extra spaces.
 
-3. **hash_sensitive_info(value)**: Hashes sensitive information (like names, addresses, and phone numbers) using SHA-256.
+3. **hash_sensitive_information(value)**: Hashes sensitive information (like names, addresses, and phone numbers) using SHA-256.
 
-4. **setup_localstack_s3()**: Sets up a connection to LocalStack S3 and creates a bucket named `health-data` if it doesn't already exist.
+4. **setup_localstack_s3()**: Sets up a connection to LocalStack S3 and creates a bucket named `patient-health-data` if it doesn't already exist.
 
 5. **process_data(patient_file, appointment_file)**: Reads the CSV files, removes duplicates, standardizes fields, and saves the processed data as Parquet files.
 
 6. **upload_to_localstack(s3, parquet_files)**: Uploads the generated Parquet files to the LocalStack S3 bucket.
 
-7. **load_and_join_pyspark()**: Initializes a PySpark session, reads the Parquet files from S3, and performs an inner join on `patient_id`.
+7. **join_using_pyspark()**: Initializes a PySpark session, reads the Parquet files from S3, and performs an inner join on `patient_id`.
 
 8. **main(patient_file, appointment_file)**: Orchestrates the entire ETL process.
 
-## Error Handling
 
-The pipeline includes error handling and logging for various stages to help troubleshoot any issues that arise during execution.
+## Usage
 
-## License
+### Prepare Data Files
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+Ensure the two CSV files: `patient_data.csv` and `appointment_data.csv` are in the same directory as the script.
 
----
 
-Feel free to adjust any sections as necessary!
+### Run the ETL Pipeline
+
+The pipeline will automatically start upon running the Docker Compose command, processing the data and uploading it to LocalStack
+
+docker-compose up --build
+
+docker-compose down or Press Ctrl+C to stop the running services
+
+
+## LocalStack
+
+You can access LocalStack using the AWS CLI. Make sure you have awscli installed, if not you can install using pip install awscli.
+
+Make sure docker services are running
+
+docker-compose up -d
+
+
+Run the following commands to setup localstack profile
+
+aws configure set aws_access_key_id test
+aws configure set aws_secret_access_key test
+aws configure set region us-east-1
+aws configure set s3.endpoint_url http://localstack:4566
+
+
+View data on simulated s3 bucket
+
+aws --endpoint-url=http://localhost:4566 s3 ls s3://patient-health-data/
+
+
+### Logging and Error Handling
+
+The pipeline logs its operations to the console. You can monitor the logs for any errors or warnings that may occur during execution. It also includes error handling for various stages to help troubleshoot any issues that may arise during execution.
