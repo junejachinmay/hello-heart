@@ -1,3 +1,8 @@
+# You can access the project on my Github 
+
+https://github.com/junejachinmay/hello-heart
+
+
 # ETL Pipeline for Patient-Health Data Processing
 
 This project implements an ETL (Extract, Transform, Load) pipeline using Python, PySpark, Docker, and LocalStack for simulating AWS S3 service. The pipeline processes patient and appointment data, standardizes the information, de-identifies sensitive fields, and uploads the processed data to the simulated S3 bucket. It utilizes PySpark to join and display the processed data.
