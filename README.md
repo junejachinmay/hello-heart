@@ -91,6 +91,9 @@ docker-compose up --build
 
 docker-compose down or Press Ctrl+C to stop the running services
 
+![alt text](image-1.png)
+
+
 
 ## LocalStack
 
@@ -113,6 +116,8 @@ View data on simulated s3 bucket
 
 docker-compose up -d
 aws --endpoint-url=http://localhost:4566 s3 ls s3://patient-health-data/
+
+![alt text](image.png)
 
 
 ### Logging and Error Handling
