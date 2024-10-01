@@ -111,6 +111,7 @@ aws configure set s3.endpoint_url http://localstack:4566
 
 View data on simulated s3 bucket
 
+docker-compose up -d
 aws --endpoint-url=http://localhost:4566 s3 ls s3://patient-health-data/
 
 
